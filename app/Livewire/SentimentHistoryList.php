@@ -46,6 +46,6 @@ class SentimentHistoryList extends Component
     public function render()
     {
         // Return the Livewire component view, passing the list of sentiment histories
-        return view('livewire.sentiment-history-list')->layout('layouts.app');
+        return view('livewire.sentiment-history-list');
     }
 }
