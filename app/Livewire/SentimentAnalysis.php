@@ -4,7 +4,9 @@ namespace App\Livewire;
 
 use App\Models\SentimentHistory;
 use Livewire\Component;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\WithFileUploads;
 
 class SentimentAnalysis extends Component
@@ -37,11 +39,11 @@ class SentimentAnalysis extends Component
         );
 
         // Log the command for debugging purposes
-        \Log::info('Running command: ' . $command);
+        Log::info('Running command: ' . $command);
 
         // Execute the Python script and capture both stdout and stderr
         $output = shell_exec($command . ' 2>&1');
-        \Log::info('Python script output: ' . $output);
+        Log::info('Python script output: ' . $output);
 
         // Decode the JSON response from the Python script
         $response = json_decode($output, true);
@@ -85,7 +87,7 @@ class SentimentAnalysis extends Component
     public function uploadAudio(Request $request)
     {
         Log::info('Audio upload process started.');
-    
+
         // Validate the audio file
         try {
             $request->validate([
@@ -95,10 +97,10 @@ class SentimentAnalysis extends Component
             Log::error('Validation failed: ' . $e->getMessage());
             return redirect()->route('sentiment-analysis')->with('error', 'Invalid file uploaded. Please upload a valid audio file.');
         }
-    
+
         if ($request->hasFile('audioFile')) {
             Log::info('Audio file detected in the request.');
-    
+
             try {
                 // Define the directory and ensure it exists
                 $directory = storage_path('app/audio_files');
@@ -106,24 +108,24 @@ class SentimentAnalysis extends Component
                     mkdir($directory, 0755, true);
                     Log::info('Created audio_files directory at: ' . $directory);
                 }
-    
+
                 // Define the file name and full path
                 $fileName = uniqid() . '.' . $request->file('audioFile')->getClientOriginalExtension();
                 $fullPath = $directory . DIRECTORY_SEPARATOR . $fileName;
-    
+
                 // Move the file to the directory
                 $request->file('audioFile')->move($directory, $fileName);
                 Log::info('Audio file moved to: ' . $fullPath);
-    
+
                 // Verify the file exists
                 if (!file_exists($fullPath)) {
                     Log::error('File missing after move: ' . $fullPath);
                     return redirect()->route('sentiment-analysis')->with('error', 'File upload failed.');
                 }
-    
+
                 // Proceed to transcription
                 $transcription = $this->transcribeAudio($fullPath);
-    
+
                 if ($transcription) {
                     Log::info('Transcription completed successfully.');
                     // Directly call sentiment analysis with transcription
@@ -141,22 +143,22 @@ class SentimentAnalysis extends Component
             return redirect()->route('sentiment-analysis')->with('error', 'No audio file uploaded.');
         }
     }
-    
-    
+
+
     private function transcribeAudio($filePath)
     {
         Log::info('Starting transcription process for file: ' . $filePath);
-        
+
         try {
             // Path to the Vosk model
             $modelPath = storage_path('app/model/vosk_model/vosk-model-small-en-us-0.15');
             Log::info('Using Vosk model path: ' . $modelPath);
-        
+
             if (!is_dir($modelPath)) {
                 Log::error('Vosk model path does not exist or is not a directory: ' . $modelPath);
                 return null;
             }
-        
+
             // Build the transcription command
             $command = sprintf(
                 'python %s %s %s',
@@ -164,24 +166,24 @@ class SentimentAnalysis extends Component
                 escapeshellarg($filePath),
                 escapeshellarg($modelPath)
             );
-        
+
             // Run the command and capture the output
             $output = shell_exec($command);
             Log::info('Raw Transcription Output: ' . $output); // Log the raw output
-        
+
             // Remove "Transcription: " from the start of the output
             $cleanedOutput = preg_replace('/^Transcription:\s*/', '', $output); // Remove any "Transcription: " text
-        
+
             // Decode the transcription result
             $response = json_decode($cleanedOutput, true);
-        
+
             // Check for JSON errors
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Log::error('JSON Decoding Error: ' . json_last_error_msg());
             } else {
                 Log::info('Decoded Transcription Response: ' . json_encode($response));
             }
-    
+
             // If transcription is successful, return the text
             if (isset($response['text']) && !empty(trim($response['text']))) {
                 Log::info('Transcribed Text: ' . $response['text']);
@@ -250,7 +252,7 @@ private function performSentimentAnalysis($text)
     return null;
 }
 
-            
+
     // Render the Livewire component view
     public function render()
     {
@@ -258,7 +260,7 @@ private function performSentimentAnalysis($text)
             'highlightedText' => $this->highlightedText,
             'emotionScores' => $this->emotionScores,
             'transcription' => $this->transcription,
-        ])->layout('layouts.app'); // Ensure layout is used if needed
+        ]); // Ensure layout is used if needed
     }
 }
 
