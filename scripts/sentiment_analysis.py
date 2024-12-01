@@ -26,21 +26,11 @@ with open(emotion_categories_path, 'r') as f:
 # Analyze sentiment using TextBlob
 blob = TextBlob(input_text)
 
-# Prepare highlighted text with placeholders to avoid overlapping replacements
+# Prepare highlighted text
 highlighted_text = input_text
 positive_words = []
 negative_words = []
 
-<<<<<<< HEAD
-# Use unique placeholders for replacement to avoid conflicts
-for word in blob.words:
-    sentiment_polarity = TextBlob(word).sentiment.polarity
-    if sentiment_polarity > 0:
-        positive_words.append(word)
-        # Use a placeholder for positive words
-        highlighted_text = highlighted_text.replace(word, f"{{POSITIVE:{word}}}")
-    elif sentiment_polarity < 0:
-=======
 # Function to detect emotions, ignoring sentiment-related words
 def detect_emotions(text):
     emotion_score = {emotion: 0 for emotion in emotion_categories}
@@ -80,41 +70,30 @@ for word in blob.words:
         positive_words.append(word)
     elif sentiment_polarity < 0 and word not in ["positive", "negative"]:
         highlighted_text = highlighted_text.replace(word, f"<span class='negative-word'>{word}</span>")
->>>>>>> 9b453b4 (Add updated files)
         negative_words.append(word)
-        # Use a placeholder for negative words
-        highlighted_text = highlighted_text.replace(word, f"{{NEGATIVE:{word}}}")
 
-<<<<<<< HEAD
-# Replace placeholders with final HTML-safe highlights
-highlighted_text = highlighted_text.replace(
-    "{POSITIVE:", "<span class='positive-word'>"
-).replace("}", "</span>")
-highlighted_text = highlighted_text.replace(
-    "{NEGATIVE:", "<span class='negative-word'>"
-).replace("}", "</span>")
+# VADER sentiment analysis: Highlight words and categorize as positive or negative
+for word in input_text.split():
+    vader_sentiment_polarity = sia.polarity_scores(word)['compound']
+    if vader_sentiment_polarity > 0:
+        highlighted_text = highlighted_text.replace(word, f"<span class='positive-word'>{word}</span>")
+        positive_words.append(word)
+    elif vader_sentiment_polarity < 0:
+        highlighted_text = highlighted_text.replace(word, f"<span class='negative-word'>{word}</span>")
+        negative_words.append(word)
 
-# Prepare the response with polarity, subjectivity, and highlighted text
-=======
 # Prepare a response with polarity, subjectivity, highlighted text, and emotions
->>>>>>> 9b453b4 (Add updated files)
 sentiment = blob.sentiment
 response = {
-    "polarity": sentiment.polarity,  # Sentiment polarity
-    "subjectivity": sentiment.subjectivity,  # Sentiment subjectivity
+    "polarity": sentiment.polarity,
+    "subjectivity": sentiment.subjectivity,
     "sentiment": "positive" if sentiment.polarity > 0 else "negative" if sentiment.polarity < 0 else "neutral",
-<<<<<<< HEAD
-    "highlighted_text": highlighted_text,  # Text with highlights
-    "positive_words": positive_words,  # List of positive words
-    "negative_words": negative_words,  # List of negative words
-=======
     "highlighted_text": highlighted_text,
     "positive_words": positive_words,
     "negative_words": negative_words,
     "emotion": emotion,  # This will always return the detected emotion
     "emotion_scores": emotion_scores,  # Emotion scores are also returned
     "vader_sentiment": vader_sentiment
->>>>>>> 9b453b4 (Add updated files)
 }
 
 # Output the response as JSON
