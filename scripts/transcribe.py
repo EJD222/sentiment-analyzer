@@ -68,7 +68,7 @@ def main(mp3_path, model_path):
     # Start transcription
     logging.debug(f"Start transcribing {wav_path}")
     transcription = transcribe_audio(wav_path, model_path)
-    
+
     if transcription:
         print("Transcription: ", transcription)
     else:
