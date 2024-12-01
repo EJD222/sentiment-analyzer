@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SentimentHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 class SentimentController extends Controller
 {
@@ -88,7 +88,7 @@ class SentimentController extends Controller
     public function uploadAudio(Request $request)
     {
         Log::info('Audio upload process started.');
-    
+
         // Validate the audio file
         try {
             $request->validate([
@@ -98,10 +98,10 @@ class SentimentController extends Controller
             Log::error('Validation failed: ' . $e->getMessage());
             return redirect()->route('sentiment-analysis')->with('error', 'Invalid file uploaded. Please upload a valid audio file.');
         }
-    
+
         if ($request->hasFile('audioFile')) {
             Log::info('Audio file detected in the request.');
-    
+
             try {
                 // Define the directory and ensure it exists
                 $directory = storage_path('app/audio_files');
@@ -109,24 +109,24 @@ class SentimentController extends Controller
                     mkdir($directory, 0755, true);
                     Log::info('Created audio_files directory at: ' . $directory);
                 }
-    
+
                 // Define the file name and full path
                 $fileName = uniqid() . '.' . $request->file('audioFile')->getClientOriginalExtension();
                 $fullPath = $directory . DIRECTORY_SEPARATOR . $fileName;
-    
+
                 // Move the file to the directory
                 $request->file('audioFile')->move($directory, $fileName);
                 Log::info('Audio file moved to: ' . $fullPath);
-    
+
                 // Verify the file exists
                 if (!file_exists($fullPath)) {
                     Log::error('File missing after move: ' . $fullPath);
                     return redirect()->route('sentiment-analysis')->with('error', 'File upload failed.');
                 }
-    
+
                 // Proceed to transcription
                 $transcription = $this->transcribeAudio($fullPath);
-    
+
                 if ($transcription) {
                     Log::info('Transcription completed successfully.');
                     // Directly call sentiment analysis with transcription
@@ -144,22 +144,22 @@ class SentimentController extends Controller
             return redirect()->route('sentiment-analysis')->with('error', 'No audio file uploaded.');
         }
     }
-    
-    
+
+
     private function transcribeAudio($filePath)
     {
         Log::info('Starting transcription process for file: ' . $filePath);
-        
+
         try {
             // Path to the Vosk model
             $modelPath = storage_path('app/model/vosk_model/vosk-model-small-en-us-0.15');
             Log::info('Using Vosk model path: ' . $modelPath);
-        
+
             if (!is_dir($modelPath)) {
                 Log::error('Vosk model path does not exist or is not a directory: ' . $modelPath);
                 return null;
             }
-        
+
             // Build the transcription command
             $command = sprintf(
                 'python %s %s %s',
@@ -167,24 +167,24 @@ class SentimentController extends Controller
                 escapeshellarg($filePath),
                 escapeshellarg($modelPath)
             );
-        
+
             // Run the command and capture the output
             $output = shell_exec($command);
             Log::info('Raw Transcription Output: ' . $output); // Log the raw output
-        
+
             // Remove "Transcription: " from the start of the output
             $cleanedOutput = preg_replace('/^Transcription:\s*/', '', $output); // Remove any "Transcription: " text
-        
+
             // Decode the transcription result
             $response = json_decode($cleanedOutput, true);
-        
+
             // Check for JSON errors
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Log::error('JSON Decoding Error: ' . json_last_error_msg());
             } else {
                 Log::info('Decoded Transcription Response: ' . json_encode($response));
             }
-    
+
             // If transcription is successful, return the text
             if (isset($response['text']) && !empty(trim($response['text']))) {
                 Log::info('Transcribed Text: ' . $response['text']);
@@ -200,57 +200,55 @@ class SentimentController extends Controller
     }
 
     public function analyzeTranscription($transcription)
-{
-    Log::info('Starting sentiment analysis for transcription: ' . $transcription);
+    {
+        Log::info('Starting sentiment analysis for transcription: ' . $transcription);
 
-    // Perform sentiment analysis on the transcription text
-    $sentimentData = $this->performSentimentAnalysis($transcription);
+        // Perform sentiment analysis on the transcription text
+        $sentimentData = $this->performSentimentAnalysis($transcription);
 
-    // Check if sentiment analysis was successful
-    if ($sentimentData) {
-        return redirect()->route('sentiment-analysis')->with([
-            'audio_result' => $sentimentData['formatted_result'],
-            'audio_highlighted_text' => $sentimentData['highlighted_text'],
-            'audio_emotion_scores' => $sentimentData['emotion_scores'],
-            'transcribed_text' => $transcription,
-        ]);
-    } else {
-        Log::error('Sentiment analysis failed.');
-        return redirect()->route('sentiment-analysis')->with('error', 'Failed to analyze sentiment.');
-    }
-}
-
-private function performSentimentAnalysis($text)
-{
-    $scriptPath = base_path('scripts/sentiment_analysis.py');
-    $command = sprintf(
-        'python %s %s',
-        escapeshellarg($scriptPath),
-        escapeshellarg($text)
-    );
-
-    $output = shell_exec($command . ' 2>&1');
-    Log::info('Python script output: ' . $output);
-
-    $response = json_decode($output, true);
-
-    if (isset($response['sentiment'])) {
-        return [
-            'formatted_result' => sprintf(
-                "Sentiment: %s\nPolarity: %s\nSubjectivity: %s\nEmotion: %s\nVader Sentiment: %s",
-                ucfirst($response['sentiment']),
-                $response['polarity'],
-                $response['subjectivity'],
-                ucfirst($response['emotion']),
-                ucfirst($response['vader_sentiment'])
-            ),
-            'highlighted_text' => $response['highlighted_text'],
-            'emotion_scores' => $response['emotion_scores'],
-        ];
+        // Check if sentiment analysis was successful
+        if ($sentimentData) {
+            return redirect()->route('sentiment-analysis')->with([
+                'audio_result' => $sentimentData['formatted_result'],
+                'audio_highlighted_text' => $sentimentData['highlighted_text'],
+                'audio_emotion_scores' => $sentimentData['emotion_scores'],
+                'transcribed_text' => $transcription,
+            ]);
+        } else {
+            Log::error('Sentiment analysis failed.');
+            return redirect()->route('sentiment-analysis')->with('error', 'Failed to analyze sentiment.');
+        }
     }
 
-    return null;
-}
+    private function performSentimentAnalysis($text)
+    {
+        $scriptPath = base_path('scripts/sentiment_analysis.py');
+        $command = sprintf(
+            'python %s %s',
+            escapeshellarg($scriptPath),
+            escapeshellarg($text)
+        );
 
-    
+        $output = shell_exec($command . ' 2>&1');
+        Log::info('Python script output: ' . $output);
+
+        $response = json_decode($output, true);
+
+        if (isset($response['sentiment'])) {
+            return [
+                'formatted_result' => sprintf(
+                    "Sentiment: %s\nPolarity: %s\nSubjectivity: %s\nEmotion: %s\nVader Sentiment: %s",
+                    ucfirst($response['sentiment']),
+                    $response['polarity'],
+                    $response['subjectivity'],
+                    ucfirst($response['emotion']),
+                    ucfirst($response['vader_sentiment'])
+                ),
+                'highlighted_text' => $response['highlighted_text'],
+                'emotion_scores' => $response['emotion_scores'],
+            ];
+        }
+
+        return null;
+    }
 }
