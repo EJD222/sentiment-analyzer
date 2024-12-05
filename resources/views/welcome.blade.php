@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Moodcloud - Sentiment Analyzer</title>
+        <title>Moodcloud</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,16 +19,16 @@
             <livewire:welcome.navigation />
         @endif
 
-<div class="background">
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-   <span></span>
-</div>
+        <div class="background">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
 
         <section class="hero-section d-flex justify-content-center align-items-center" id="section_1">
                 <div class="container">
@@ -126,8 +126,8 @@
  
         <div class="col-lg-3 col-12 mb-4 pb-2">
                         <a class="navbar-brand mb-2" href="index.html">
-                            <i class="bi-back"></i>
-                            <span>Sentiment</span>
+                            <img src="{{ asset('/images/Logo-3.png') }}" alt="Moodcloud Logo" class="navbar-logo" style="width: 55px; height: auto; margin-right: 10px;">
+                            <span>Moodcloud</span>
                         </a>
                         <p class="copyright-text mt-lg-5 mt-4">Copyright © 2024. All rights reserved.                        
 

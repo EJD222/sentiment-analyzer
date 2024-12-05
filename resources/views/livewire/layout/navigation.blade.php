@@ -14,7 +14,7 @@ $logout = function (Logout $logout) {
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
             <img src="{{ asset('/images/Logo-3.png') }}" alt="Moodcloud Logo" class="navbar-logo" style="width: 55px; height: auto; margin-right: 10px;">
-            <span>Mood Cloud</span>
+            <span>Moodcloud</span>
         </a>
  
         <div class="d-lg-none ms-auto me-4">
