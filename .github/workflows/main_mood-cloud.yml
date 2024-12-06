@@ -31,11 +31,17 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'true'
         run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
 
-      - name: Install npm
+      - name: Install npm dependencies
         run: npm install
 
-      - name: Npm Production
-        run: npm run production
+      - name: Install Tailwind CSS
+        run: npm install tailwindcss
+
+      - name: Run Composer Dump-Autoload
+        run: composer dump-autoload
+
+      - name: Build assets with npm
+        run: npm run build
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
