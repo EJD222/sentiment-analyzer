@@ -7,8 +7,7 @@ use App\Livewire\ContactUs;
 use App\Livewire\SentimentAnalysis;
 use App\Livewire\SentimentHistoryList;
 
-Route::view('/', view: 'welcome')
-    ->name('welcome');
+Route::view('/', view: 'welcome');
 
 Route::view('dashboard', 'dashboard')
     ->name('dashboard');
