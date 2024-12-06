@@ -31,34 +31,6 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'true'
         run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18' # Specify Node.js version
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'  # Specify Python version
-
-      - name: Install Composer dependencies
-        run: |
-          composer install --prefer-dist --no-progress
-          npm install
-          cp .env.example .env
-          php artisan key:generate
-          php artisan migrate --force
-          python --version
-          pip install --upgrade pip
-          pip install textblob
-          python -m textblob.download_corpora
-          python -m nltk.downloader punkt
-          python -c "import nltk; nltk.download('vader_lexicon')"
-          pip install vosk pydub
-          npm install vite --save-dev
-          npm install bootstrap-icons --save-dev
-          npm run dev
-
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
 
@@ -82,35 +54,13 @@ jobs:
           name: php-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip -d /home/site/wwwroot
-
-      - name: Deploy to Azure Web App
+        run: unzip release.zip
+      
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: ${{ secrets.AZURE_APP_NAME }}
-          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
-          package: /home/site/wwwroot
-
-      # Post-deployment steps to install Composer, run migrations, and other commands
-      - name: Run post-deployment commands on Azure
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.AZURE_SSH_PRIVATE_KEY }} ${{ secrets.AZURE_SSH_USER }}@${{ secrets.AZURE_APP_NAME }}.scm.azurewebsites.net << 'EOF'
-            cd /home/site/wwwroot
-            composer update --prefer-dist --no-progress
-            npm install
-            cp .env.example .env
-            php artisan key:generate
-            php artisan migrate --force
-            python --version
-            pip install --upgrade pip
-            pip install textblob
-            python -m textblob.download_corpora
-            python -m nltk.downloader punkt
-            python -c "import nltk; nltk.download('vader_lexicon')"
-            pip install vosk pydub
-            npm install vite --save-dev
-            npm install bootstrap-icons --save-dev
-            npm run dev
-            php artisan serve
-          EOF
+          app-name: 'mood-cloud'
+          slot-name: 'Production'
+          package: .
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_33D05D02B48A4CA998E4CB716597F74A }}
